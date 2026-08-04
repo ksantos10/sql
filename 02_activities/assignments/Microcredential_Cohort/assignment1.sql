@@ -17,7 +17,7 @@ sorted by customer_last_name, then customer_first_ name. */
 --QUERY 2
 select*
 from customer 
-order by customer_last_name, customer_first_name /*/
+order by customer_last_name, customer_first_name 
 limit 10;
 
 
@@ -215,6 +215,6 @@ SELECT
 FROM customer_purchases
 WHERE strftime('%m', market_date) = '04'
   AND strftime('%Y', market_date) = '2022'
-GROUP BY customer_id;
+GROUP BY customer_id; /*/
 
 --END QUERY
