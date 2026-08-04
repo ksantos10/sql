@@ -7,7 +7,7 @@
 /* 1. Write a query that returns everything in the customer table. */
 --QUERY 1
 
-select* from customer /*/ 
+select* from customer 
 
 --END QUERY
 
@@ -17,7 +17,7 @@ sorted by customer_last_name, then customer_first_ name. */
 --QUERY 2
 select*
 from customer 
-order by customer_last_name, customer_first_name 
+order by customer_last_name, customer_first_name /*/
 limit 10;
 
 
