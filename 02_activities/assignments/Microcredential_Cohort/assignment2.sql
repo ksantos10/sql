@@ -23,8 +23,9 @@ Edit the appropriate columns -- you're making two edits -- and the NULL rows wil
 All the other rows will remain the same. */
 --QUERY 1
 
-SELECT
-product_name || ', ' || COALESCE(product_size, '') || ' (' || COALESCE(product_qty_type, 'unit') || ')'
+SELECT product_name || ', ' || 
+	COALESCE(product_size, '') || 
+	' (' || COALESCE(product_qty_type, 'unit') || ')'
 FROM product;
 
 
@@ -43,7 +44,20 @@ HINT: One of these approaches uses ROW_NUMBER() and one uses DENSE_RANK().
 Filter the visits to dates before April 29, 2022. */
 --QUERY 2
 
-
+SELECT customer_id,
+       market_date,
+       ROW_NUMBER() OVER (
+           PARTITION BY customer_id
+           ORDER BY market_date
+       ) AS visit_number --Each customer’s first visit is labeled 1, second visit is labeled 2, etc.
+FROM (
+    SELECT DISTINCT customer_id,
+                    market_date
+    FROM customer_purchases
+    WHERE market_date < '2022-04-29'  --Filter the visits to dates before April 29, 2022
+)
+ORDER BY customer_id,
+         market_date;
 
 
 --END QUERY
@@ -56,6 +70,21 @@ HINT: Do not use the previous visit dates filter. */
 --QUERY 3
 
 
+FROM (
+    SELECT customer_id,
+           market_date,
+           ROW_NUMBER() OVER (
+               PARTITION BY customer_id
+               ORDER BY market_date DESC --Reverse the numbering of the query so each customer’s most recent visit is labeled 1
+           ) AS visit_number
+    FROM (
+        SELECT DISTINCT customer_id,
+                        market_date
+        FROM customer_purchases
+    )
+)
+WHERE visit_number = 1 --Reverse the numbering of the query so each customer’s most recent visit is labeled 1
+ORDER BY customer_id;
 
 
 --END QUERY
@@ -68,7 +97,16 @@ You can make this a running count by including an ORDER BY within the PARTITION 
 Filter the visits to dates before April 29, 2022. */
 --QUERY 4
 
-
+SELECT *,
+       COUNT(*) OVER (
+           PARTITION BY customer_id,
+                        product_id
+       ) AS customer_purchase_count --how many different times that customer has purchased that product_id.
+FROM customer_purchases
+WHERE market_date < '2022-04-29' --Filter the visits to dates before April 29, 2022.
+ORDER BY customer_id,
+         product_id,
+         market_date;
 
 
 --END QUERY
