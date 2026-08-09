@@ -56,7 +56,37 @@ The store wants to keep customer addresses. Propose two architectures for the CU
 **HINT:** search type 1 vs type 2 slowly changing dimensions. 
 
 ```
-Your answer...
+Prompt 3: Response
+
+The store wants to keep customer addresses. Propose two architectures for the CUSTOMER_ADDRESS table, one that will retain changes, and another that will overwrite. Which is type 1, which is type 2?
+
+Type 1: Overwrite Address Changes 
+Google search: When a customer moves, the old address is replaced with the new one. No history is kept. Type 1 SCDs overwrite existing values and only store the current state
+
+The Toronto address is lost.
+Advantages: Simple design, less storage required, easy to maintain
+Disadvantage:
+No historical record of previous address
+
+Example 
+Before: CustomerID: 101, StreetAddress: 456 King St, City: Toronto
+After: CustomerID: 101, Address: 387 North St, City: Thunder Bay
+
+Type 2: Retain Address History
+
+Google search: When a customer moves, a new row is created instead of updating the old row. The old record is retained, allowing historical reporting. Type 2 SCDs preserve history by adding new records and tracking effective dates
+
+
+The bookstore can see both the current address and previous addresses.
+
+Example
+AddressID: 235, CustomerID: 101, StreetAddress: 456 King St, City: Toronto, IsCurrent: Yes
+
+Advantages: Complete address history, supports auditing and historical analysis, can answer questions such as "Where did the customer live when the order was placed?"
+
+Disadvantages: Complex, requires additional storage and maintenance
+
+
 ```
 
 ***
