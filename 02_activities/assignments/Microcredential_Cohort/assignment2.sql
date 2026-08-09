@@ -160,9 +160,6 @@ FROM product
 WHERE product_size GLOB '*[0-9]*';
 
 
-
-
-
 --END QUERY
 
 
@@ -268,6 +265,12 @@ SELECT *,
 FROM product
 WHERE product_qty_type = 'unit';
 
+--Double check
+--select * 
+--from product_units
+
+
+
 --END QUERY
 
 
@@ -275,6 +278,22 @@ WHERE product_qty_type = 'unit';
 This can be any product you desire (e.g. add another record for Apple Pie). */
 --QUERY 10
 
+INSERT INTO product_units (
+    product_id,
+    product_name,
+    product_size,
+    product_category_id,
+    product_qty_type,
+    snapshot_timestamp
+)
+SELECT product_id,
+       product_name,
+       product_size,
+       product_category_id,
+       product_qty_type,
+       CURRENT_TIMESTAMP
+FROM product
+WHERE product_id = 7;
 
 
 
@@ -288,7 +307,17 @@ HINT: If you don't specify a WHERE clause, you are going to have a bad time.*/
 --QUERY 11
 
 
+DELETE FROM product_units
+WHERE product_id = 10
+  AND snapshot_timestamp = (
+      SELECT MIN(snapshot_timestamp)
+      FROM product_units
+      WHERE product_id = 10
+  );
 
+--Double check
+--select * 
+--from product_units
 
 --END QUERY
 
@@ -311,9 +340,21 @@ Finally, make sure you have a WHERE statement to update the right row,
 When you have all of these components, you can run the update statement. */
 --QUERY 12
 
+--this one shows error...
+ALTER TABLE product_units
+ADD current_quantity INT;
 
-
-
+UPDATE product_units
+SET current_quantity = COALESCE(
+    (
+        SELECT vi.quantity
+        FROM vendor_inventory AS vi
+        WHERE vi.product_id = product_units.product_id
+        ORDER BY vi.market_date DESC
+        LIMIT 1
+    ),
+    0
+);
 --END QUERY
 
 
