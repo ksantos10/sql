@@ -125,7 +125,17 @@ Remove any trailing or leading whitespaces. Don't just use a case statement for 
 Hint: you might need to use INSTR(product_name,'-') to find the hyphens. INSTR will help split the column. */
 --QUERY 5
 
-
+SELECT product_name,
+       NULLIF(
+           TRIM(
+               SUBSTR(
+                   product_name,
+                   INSTR(product_name, '-') + 1
+               )
+           ),
+           TRIM(product_name)
+       ) AS description
+FROM product;
 
 
 --END QUERY
@@ -133,6 +143,22 @@ Hint: you might need to use INSTR(product_name,'-') to find the hyphens. INSTR w
 
 /* 2. Filter the query to show any product_size value that contain a number with REGEXP. */
 --QUERY 6
+--NOTE: local environment doesn't have the REGEXP function loaded, but if it did:
+--SELECT product_id,
+--       product_name,
+ --      product_size
+--FROM product
+--WHERE product_size REGEXP '*[0-9]*'; -- that contain a number with REGEXP;
+-- 
+
+--I used GLOB instead
+SELECT
+    product_id,
+    product_name,
+    product_size
+FROM product
+WHERE product_size GLOB '*[0-9]*';
+
 
 
 
@@ -150,7 +176,38 @@ HINT: There are a possibly a few ways to do this query, but if you're struggling
 3) Query the second temp table twice, once for the best day, once for the worst day, 
 with a UNION binding them. */
 --QUERY 7
+--1) Create a CTE/Temp Table to find sales values grouped dates;
+WITH sales_by_date AS (
+    SELECT market_date,
+           SUM(quantity * cost_per_quantity) AS total_sales
+    FROM customer_purchases
+    GROUP BY market_date
+),
+ranked_sales AS (
+    SELECT market_date,
+           total_sales,
+           RANK() OVER (
+               ORDER BY total_sales DESC
+           ) AS highest_sales_rank,
+           RANK() OVER (
+               ORDER BY total_sales
+           ) AS lowest_sales_rank
+    FROM sales_by_date
+)
 
+SELECT market_date,
+       total_sales,
+       'Highest sales' AS sales_result
+FROM ranked_sales
+WHERE highest_sales_rank = 1
+
+UNION
+
+SELECT market_date,
+       total_sales,
+       'Lowest sales' AS sales_result
+FROM ranked_sales
+WHERE lowest_sales_rank = 1;
 
 
 
@@ -174,6 +231,25 @@ Before your final group by you should have the product of those two queries (x*y
 
 
 
+SELECT v.vendor_name,
+       p.product_name,
+       SUM(vi.product_revenue) AS total_revenue
+FROM (
+    SELECT DISTINCT vendor_id,
+                    product_id,
+                    original_price * 5 AS product_revenue
+    FROM vendor_inventory
+) AS vi
+CROSS JOIN customer AS c
+INNER JOIN vendor AS v
+    ON vi.vendor_id = v.vendor_id
+INNER JOIN product AS p
+    ON vi.product_id = p.product_id
+GROUP BY v.vendor_name,
+         p.product_name
+ORDER BY v.vendor_name,
+         p.product_name;
+
 
 --END QUERY
 
@@ -186,7 +262,11 @@ Name the timestamp column `snapshot_timestamp`. */
 --QUERY 9
 
 
-
+CREATE TABLE product_units AS
+SELECT *,
+       CURRENT_TIMESTAMP AS snapshot_timestamp
+FROM product
+WHERE product_qty_type = 'unit';
 
 --END QUERY
 
